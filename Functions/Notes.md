@@ -95,5 +95,28 @@ String response = ChatClient.create(chatModel)
 System.out.println(response);
 ```
 
+## Functions as Tools
+- The follwing types are not supported as params or return types for methods used as tools.
+- Optional , async types (Completeable Future, Future), Reactive types ( eg:- Flow, Mono, Flux) and functional types(eg:- Function, Supplier, Consumer)
+- To support these types SPring AI provides built-in support for specifying tools suing functions i.e either FunctionToolCallBack implementation or dynamically as @Bean -> resolved at runtime.
+
+  ##PRogrammatic specification (FunctionToolCallback)
+  - we can turn a functional type (Function, Supplier, Consumer or BiFunction) into  a tool by building FunctionalToolCallback programmatically.
+ 
+  -
+    ```
+    public class WeatherService implements Function<WeatherRequest, WeatherResponse> {
+    public WeatherResponse apply(WeatherRequest request) {
+        return new WeatherResponse(30.0, Unit.C);
+    }
+}
+
+public enum Unit { C, F }
+public record WeatherRequest(String location, Unit unit) {}
+public record WeatherResponse(double temp, Unit unit) {}
+    ```
+
+- The FunctionToolCallback.Builder allows to build a FunctionToolCallback instance and provide key info about the tool.
+  
 
 
