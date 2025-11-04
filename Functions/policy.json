@@ -1,0 +1,18 @@
+{
+  "policies": [
+    {
+      "key": "refund",
+      "title": "Refund Policy",
+      "updatedAt": "2025-11-01",
+      "summary": "Orders canceled by carrier or merchant are eligible for refunds within 14 days.",
+      "fullText": "Full policy markdown or HTML here..."
+    },
+    {
+      "key": "shipping",
+      "title": "Shipping Policy",
+      "updatedAt": "2025-10-15",
+      "summary": "Standard shipping 5-7 business days; expedited 1-2 business days.",
+      "fullText": "Full policy markdown or HTML here..."
+    }
+  ]
+}
