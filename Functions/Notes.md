@@ -117,6 +117,79 @@ public record WeatherResponse(double temp, Unit unit) {}
     ```
 
 - The FunctionToolCallback.Builder allows to build a FunctionToolCallback instance and provide key info about the tool.
+- name: Name of the tool. AI model uses this name to identify the tool when calling it. So, it's not allowed to have tools with same name in the same context.
+- toolFunction: The functional object that represents the tool method (Function, Supplier, Consumer or BiFunction)
+- description:- Description for the tool, which can be used by the model to understand when and how to call the model.
+- inputType: The type of the function input required.
+- inputSchema - JSON schema for the input parameters of teh tool. If not provideed the schema will be generated automatically based on the input type.
+- toolMetadata - The toolmetada instance define additional settings such as whether the result should be returned directly to the client and result converter to use. We can build ToolMetada using ToolMetadata.Builder.
+
+```
+ToolCallBack toolCallBack = FunctionToolCallBack
+.builder("currentWeather", new WeatherService())
+.description("Get the weather in location")
+.inputType(WeatherRequest.class)
+.build();
+```
+- Now we have to pass the FunctionToolCallBack instance to the toolCallbacks() method of chatClient.
+```
+ChatClient.create(chatModel)
+.prompt("What's the weather in cincinnati")
+.toolCallbacks(toolCallback)
+.call()
+.content();
+```
+
+## Adding default tools to chatModel
+```
+ToolCallback toolCallback = FunctionToolCallback.builder()...
+
+ChatModel chatModel = OllamaChatModel.builder()
+.ollamaApi(OllamaApi.builder().build())
+.defaultOptions(
+   ToolCallingChatOptions()
+   .builder()
+   .toolCallbacks(toolCallBack)
+   .build())
+.build();
+```
+
+- Instead of specifying tools programatically, we can define tools as Spring beans and let SpringAi dynamically resolve them using ToolCallbackResolver interface via SpringBootToolCallBackResolver implementation. This option allows us to use any Function,Supplier, Consumer or BiFunction bean as a tool. The bean name is used as a tool name and @Description annotaton from spring framework can be used to provide description fro the tool.
+
+```
+@Configuration(proxyBeanMethods = false)
+class WeatherTools {
+  WeatherService weatherService = new WeatherService();
+
+  @Bean
+  @Description("Get the weather in location")
+  Function<WeatherRequest,WeatherResponse> currentWeather(){
+    return weatherService;
+  }
+}
+```
+
+```
+record WeatherRequest(@ToolParam(description = "The name of a city or a country") String location, Unit unit) {}
+```
+
+```
+ChatClient.create(chatModel)
+    .prompt("What's the weather like in Copenhagen?")
+    .toolNames("currentWeather")
+    .call()
+    .content();
+```
+
+- For dynamic specification approach, you can pass the tool name to the toolNames() method of the ToolCallingChatOptions you use to call the ChatModel.
+```
+ChatModel chatModel = ...
+ChatOptions chatOptions = ToolCallingChatOptions.builder()
+    .toolNames("currentWeather")
+    .build();
+Prompt prompt = new Prompt("What's the weather like in Copenhagen?", chatOptions);
+chatModel.call(prompt);
+```
   
 
 
